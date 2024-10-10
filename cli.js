@@ -1,58 +1,51 @@
-#!/user/bin/env node
-const yargs = require("yargs");
-const chalk = require("chalk");
-const fs = require("fs");
-const { generateResponsiveGrid } = require("./gridMatic");
-yargs
+#!/usr/bin/env node
+
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import chalk from "chalk";
+import fs from "fs";
+
+yargs(hideBin(process.argv))
   .command(
     "generate",
-    "Generate a CSS grid layout",
+    "Generate a CSS grid",
     {
       columns: {
-        describe: "Number of columns in the grid",
-        demandOption: true,
         type: "number",
+        describe: "Number of columns",
+        demandOption: true,
       },
       rows: {
-        describe: "Number of rows in the grid",
-        demandOption: true,
         type: "number",
+        describe: "Number of rows",
+        demandOption: true,
       },
       gap: {
-        describe: "Gap between grid items: ",
-        demandOption: false,
-        default: "10px",
         type: "string",
+        describe: "Gap between grid items",
+        demandOption: true,
       },
       output: {
-        describe: "File to write generated CSS to",
-        demandOption: false,
         type: "string",
-      },
-      breakpoints: {
-        describe: "Responsive breakpoints in JSON format",
-        demandOption: false,
-        type: "string",
+        describe: "Output file for the generated CSS",
+        demandOption: true,
       },
     },
-    (argv) => {
-      const { columns, rows, gap, output, breakpoints } = argv;
-      let parsedBreakpoints = {};
-      if (breakpoints) {
-        try {
-          parsedBreakpoints = JSON.parse(breakpoints);
-        } catch (error) {
-          console.error(chalk.red("Invalid JSON breakpoints"));
-          process.exit(1);
+    function (argv) {
+      const gridCss = `
+        .grid-container {
+          display: grid;  
+          grid-template-columns: repeat(${argv.columns}, 1fr);
+          grid-template-rows: repeat(${argv.rows}, auto);
+          gap: ${argv.gap};
         }
-      }
-      const css = generateResponsiveGrid(columns, rows, gap, parsedBreakpoints);
-      if (output) {
-        fs.writeFileSync(output, css);
-        console.log(chalk.green(`Grid css written to ${output}`));
-      } else {
-        console.log(css);
-      }
+      `;
+
+      fs.writeFileSync(argv.output, gridCss);
+
+      console.log(
+        chalk.green(`CSS grid successfully generated in ${argv.output}`)
+      );
     }
   )
   .help().argv;
